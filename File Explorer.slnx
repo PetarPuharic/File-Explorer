@@ -3,5 +3,6 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="File Explorer/File Explorer.vcxproj" />
+  <Project Path="File Explorer/File Explorer.vcxproj" Id="61e2d4fe-4bdf-4333-8aa9-ab669b6072a6" />
+  <Project Path="Unit Tests/Unit Tests.vcxproj" />
 </Solution>
