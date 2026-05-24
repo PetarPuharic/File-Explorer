@@ -6,6 +6,14 @@
 
 #ifndef PCH_H
 #define PCH_H
+#include <iostream>
+#include <filesystem>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <conio.h>
+#include <windows.h>
+#include <unordered_map>
 
 // add headers that you want to pre-compile here
 

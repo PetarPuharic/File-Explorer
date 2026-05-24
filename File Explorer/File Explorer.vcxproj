@@ -128,6 +128,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="File Explorer.cpp" />
+    <ClCompile Include="Functions.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="TheHeader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
