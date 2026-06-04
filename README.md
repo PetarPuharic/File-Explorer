@@ -10,7 +10,7 @@ Q - Quit <br/>
 File Types Colours: <br/>
 .cpp .c .ts .css                    → $${\color{blue}BLUE}$$ <br/>
 .h .hpp .go                         → $${\color{blue}CYAN }$$<br/>
-.py .sh .bat .exe                   → $${\color{GREEN}CGREEN }$$<br/>
+.py .sh .bat .exe                   → $${\color{GREEN}GREEN }$$<br/>
 .js .json .yaml .xml .zip           → $${\color{YELLOW}YELLOW }$$ <br/>
 .html .pdf .dll                     → $${\color{RED}RED}$$ <br/>
 .gif .svg .mp4 .cs .png .jpg .jpeg  → $${\color{MAGENTA}MAGENTA }$$ <br/>
