@@ -24,8 +24,8 @@ File Types Colours: <br/>
 .md .txt                            → $${\color{WHITE}WHITE}$$ <br/>
 
 # Imortant Librarys
-<filesystem> - Used to get directory/paths <br/>
-<conio.h> - Used to get keyinputs (_getch()) <br/>
-<windows.h> - Functions and terminal size <br/>
-<format> - String formatting (std::format) <br/>
+filesystem - Used to get directory/paths <br/>
+conio.h - Used to get keyinputs (_getch()) <br/>
+windows.h - Functions and terminal size <br/>
+format - String formatting (std::format) <br/>
 
