@@ -21,17 +21,37 @@ void enableAnsi() {
     DWORD  mode = 0;
     GetConsoleMode(hOut, &mode);
     SetConsoleMode(hOut, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+
+    // Use UTF-8 for console I/O so names/paths with non-ASCII letters
+    // (e.g. Croatian "ć") render correctly instead of being mangled.
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
 }
 
 std::string toLower(std::string s) { //SelfExplanatory
-    for (auto& c : s) c = (char)std::tolower((unsigned char)c);
+    for (auto& c : s) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     return s;
 }
 
-std::string getExt(const std::string& name) {
-    auto dot = name.rfind('.');
-    if (dot == std::string::npos || dot == 0) return "";
-    return toLower(name.substr(dot + 1));
+
+std::string pathToUtf8(const fs::path& p) {
+    const std::wstring& w = p.native();
+    if (w.empty()) return {};
+
+    int needed = WideCharToMultiByte(CP_UTF8, 0, w.c_str(), static_cast<int>(w.size()),
+        nullptr, 0, nullptr, nullptr);
+    if (needed <= 0) return {};
+
+    std::string out(static_cast<size_t>(needed), '\0');
+    WideCharToMultiByte(CP_UTF8, 0, w.c_str(), static_cast<int>(w.size()),
+        out.data(), needed, nullptr, nullptr);
+    return out;
+}
+
+std::string getExt(const fs::path& name) {
+    std::string ext = pathToUtf8(name.extension());
+    if (ext.size() <= 1) return ""; // "" (no extension) or just "."
+    return toLower(ext.substr(1));
 }
 
 std::pair<std::string, std::string> entryStyle(const Entry& e) {
@@ -63,37 +83,44 @@ std::pair<std::string, std::string> entryStyle(const Entry& e) {
 // Size of files in human readable formats
 std::string humanSize(uintmax_t bytes) {
     if (bytes == 0) return "-";
-    const char* units[] = { "B", "KB", "MB", "GB" };
-    int u = 0; double v = (double)bytes;
+    static constexpr const char* units[] = { "B", "KB", "MB", "GB" };
+    int u = 0;
+    double v = static_cast<double>(bytes);
     while (v >= 1024.0 && u < 3) { v /= 1024.0; ++u; }
-    char buf[20];
-    if (u == 0) snprintf(buf, sizeof(buf), "%llu B", (unsigned long long)bytes);
-    else        snprintf(buf, sizeof(buf), "%.1f %s", v, units[u]);
-    return buf;
+
+    if (u == 0) return std::format("{} B", bytes);
+    return std::format("{:.1f} {}", v, units[u]);
 }
 
 std::string fit(const std::string& s, int w) {
     if (w <= 0) return "";
-    if ((int)s.size() > w) return s.substr(0, w - 1) + "~";
-    return s + std::string(w - (int)s.size(), ' ');
+    if (static_cast<int>(s.size()) > w) return s.substr(0, w - 1) + "~";
+    return s + std::string(w - static_cast<int>(s.size()), ' ');
 }
 
-// LOADING DIRESCTORY ENTRIES
+// LOADING DIRECTORY ENTRIES
 std::vector<Entry> loadDir(const fs::path& dir) {
     std::vector<Entry> entries;
-    if (dir.has_parent_path() && dir != dir.root_path())
-        entries.push_back({ "..", true, 0, "" });
+    if (dir.has_parent_path() && dir != dir.root_path()) {
+        Entry up;
+        up.name = "..";
+        up.path = dir.parent_path();
+        up.isDir = true;
+        up.size = 0;
+        entries.push_back(up);
+    }
 
     try {
         for (const auto& de : fs::directory_iterator(dir,
             fs::directory_options::skip_permission_denied)) {
             Entry e;
-            e.name = de.path().filename().string();
+            e.path = de.path();
+            e.name = pathToUtf8(e.path.filename());
             e.isDir = de.is_directory();
-            e.ext = getExt(e.name);
+            e.ext = getExt(e.path);
             if (!e.isDir) {
                 std::error_code ec;
-                e.size = fs::file_size(de.path(), ec);
+                e.size = fs::file_size(e.path, ec);
                 if (ec) e.size = 0;
             }
             entries.push_back(e);
@@ -120,16 +147,16 @@ void render(const fs::path& cwd, const std::vector<Entry>& entries, int sel, int
     clearScreen();
 
     // Title bar
-    std::string title = " >> " + cwd.string() + " ";
+    std::string title = std::format(" >> {} ", pathToUtf8(cwd));
     std::cout << BG_BLUE << BOLD << FG_WHITE << fit(title, W) << RESET << "\n";
 
     // Column header
-    std::string hdr = "  " + fit("  Name", nameW) + fit("Type  ", 10) + fit("Size", 8);
+    std::string hdr = std::format("  {}{}{}", fit("  Name", nameW), fit("Type  ", 10), fit("Size", 8));
     std::cout << BG_ALT << FG_GRAY << BOLD << fit(hdr, W) << RESET << "\n";
     std::cout << FG_GRAY << DIM << std::string(W, '-') << RESET << "\n";
 
     // File rows
-    int end = min((int)entries.size(), scroll + listH);
+    int end = std::min(static_cast<int>(entries.size()), scroll + listH);
     for (int i = scroll; i < end; ++i) {
         const Entry& e = entries[i];
         bool hi = (i == sel);
@@ -137,8 +164,7 @@ void render(const fs::path& cwd, const std::vector<Entry>& entries, int sel, int
 
         std::string typeStr = e.isDir ? "dir" : (e.ext.empty() ? "file" : e.ext);
         std::string sizeStr = e.isDir ? "-" : humanSize(e.size);
-        std::string row = "  " + icon + fit(e.name, nameW - 8) + "  "
-            + fit(typeStr, 8) + fit(sizeStr, 8);
+        std::string row = std::format("  {}{}  {}{}", icon, fit(e.name, nameW - 8), fit(typeStr, 8), fit(sizeStr, 8));
 
         if (hi) {
             std::cout << BG_BLUE << BOLD << FG_WHITE << fit(row, W) << RESET << "\n";
@@ -154,13 +180,12 @@ void render(const fs::path& cwd, const std::vector<Entry>& entries, int sel, int
         std::cout << std::string(W, ' ') << "\n";
 
     // Status bar
-    std::string status = " " + std::to_string(sel + 1) + "/" +
-        std::to_string(entries.size()) + "  " +
-        (entries.empty() ? "" : entries[sel].name);
+    std::string status = std::format(" {}/{}  {}", sel + 1, entries.size(),
+        entries.empty() ? "" : entries[sel].name);
     std::string keys = " [Up/Down] navigate  [Enter] open dir  [Q] quit ";
     std::cout << FG_GRAY << DIM << std::string(W, '-') << RESET << "\n";
     std::cout << BG_ALT << FG_CYAN << BOLD << status
-        << std::string(max(0, W - (int)status.size() - (int)keys.size()), ' ')
+        << std::string(std::max(0, W - static_cast<int>(status.size()) - static_cast<int>(keys.size())), ' ')
         << FG_GRAY << RESET << BG_ALT << keys << RESET;
     std::cout.flush();
 }

@@ -12,6 +12,7 @@
 #include <string>
 #include <algorithm>
 #include <conio.h>
+#define NOMINMAX
 #include <windows.h>
 #include <unordered_map>
 

@@ -1,0 +1,55 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+        platform: [x64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build solution
+        run: msbuild "File Explorer.slnx" /m /nologo /verbosity:minimal /p:Configuration=${{ matrix.configuration }} /p:Platform=${{ matrix.platform }}
+        shell: pwsh
+
+      - name: Locate vstest.console.exe
+        id: vstest
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vstestPath = & $vswhere -latest -prerelease -find "**\vstest.console.exe" | Select-Object -First 1
+          if (-not $vstestPath) {
+            throw "Could not locate vstest.console.exe"
+          }
+          Write-Host "Found vstest.console.exe at $vstestPath"
+          echo "path=$vstestPath" >> $env:GITHUB_OUTPUT
+
+      - name: Run unit tests
+        shell: pwsh
+        run: |
+          $dll = "${{ matrix.platform }}\${{ matrix.configuration }}\Unit Tests.dll"
+          & "${{ steps.vstest.outputs.path }}" $dll /Logger:console;verbosity=detailed /Logger:trx
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.configuration }}-${{ matrix.platform }}
+          path: TestResults/*.trx
+          if-no-files-found: ignore

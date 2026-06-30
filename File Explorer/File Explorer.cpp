@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
         int listH = termHeight() - 5;
         if (sel < scroll)           scroll = sel;
         if (sel >= scroll + listH)  scroll = sel - listH + 1;
-        scroll = max(0, scroll);
+        scroll = std::max(0, scroll);
         };
 
     render(cwd, entries, sel, scroll);
@@ -26,12 +26,11 @@ int main(int argc, char* argv[]) {
         if (k == Key::Up && sel > 0) {
             --sel; clampScroll();
         }
-        else if (k == Key::Down && sel < (int)entries.size() - 1) {
+        else if (k == Key::Down && sel < static_cast<int>(entries.size()) - 1) {
             ++sel; clampScroll();
         }
         else if (k == Key::Enter && !entries.empty() && entries[sel].isDir) {
-            fs::path next = (entries[sel].name == "..") ? cwd.parent_path()
-                : cwd / entries[sel].name;
+            fs::path next = entries[sel].path;
             std::error_code ec;
             if (fs::is_directory(next, ec)) {
                 cwd = next; entries = loadDir(cwd); sel = 0; scroll = 0;

@@ -5,7 +5,9 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <format>
 #include <conio.h>
+#define NOMINMAX
 #include <windows.h>
 #include <unordered_map>
 #include <iostream>
@@ -28,7 +30,8 @@
 namespace fs = std::filesystem;
 
 struct Entry {
-    std::string name;
+    std::string name; 
+    fs::path    path;   
     bool        isDir;
     uintmax_t   size;
     std::string ext;
@@ -46,7 +49,8 @@ std::string toLower(std::string s);
 std::string humanSize(uintmax_t bytes);
 std::string fit(const std::string& s, int w);
 
-std::string getExt(const std::string& name);
+std::string getExt(const fs::path& name);
+std::string pathToUtf8(const fs::path& p);
 std::pair<std::string, std::string> entryStyle(const Entry& e);
 std::vector<Entry> loadDir(const fs::path& dir);
 
