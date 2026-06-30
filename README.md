@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 [![Build and Test](https://github.com/PetarPuharic/File-Explorer/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/PetarPuharic/File-Explorer/actions/workflows/build-and-test.yml)
 
 # Summary
@@ -9,7 +8,6 @@ Possible Future Features: Opening a selected file
 A Console Based File Explorer Written in C++ <br/>
 Current Function: File View <br/>
 Possible Future Features: Opening a selected file <br/>
->>>>>>> d6e4c4cdac19c9eec3d5de5d6280a1e6bec1db57
 
 # Navigation
 Up/Down Arrow - Navigation <br/>
@@ -26,7 +24,6 @@ File Types Colours: <br/>
 .md .txt                            → $${\color{WHITE}WHITE}$$ <br/>
 
 # Imortant Librarys
-<<<<<<< HEAD
 <filesystem> - Used to get directory/paths
 <conio.h> - Used to get keyinputs (_getch())
 <windows.h> - Functions and terminal size
@@ -37,4 +34,3 @@ File Types Colours: <br/>
 <filesystem.> - Used to get directory/paths <br/>
 <conio.h>     - Used to get keyinputs (_getch()) <br/>
 <windows.h>   - Functions and terminal size
->>>>>>> d6e4c4cdac19c9eec3d5de5d6280a1e6bec1db57
