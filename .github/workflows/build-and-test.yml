@@ -44,7 +44,7 @@ jobs:
         shell: pwsh
         run: |
           $dll = "${{ matrix.platform }}\${{ matrix.configuration }}\Unit Tests.dll"
-          & "${{ steps.vstest.outputs.path }}" $dll /Logger:console;verbosity=detailed /Logger:trx
+          & "${{ steps.vstest.outputs.path }}" $dll "/Logger:console;verbosity=detailed" "/Logger:trx"
 
       - name: Upload test results
         if: always()
